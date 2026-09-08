@@ -12,6 +12,14 @@ public class PerformanceConfiguration : IEntityTypeConfiguration<Performance>
 
 		builder.HasKey(performance => performance.Id);
 
+		builder.Property(performance => performance.Source)
+			.IsRequired()
+			.HasMaxLength(100);
+
+		builder.Property(performance => performance.ExternalId)
+			.IsRequired()
+			.HasMaxLength(200);
+
 		builder.Property(performance => performance.BandId)
 			.IsRequired();
 
@@ -24,6 +32,8 @@ public class PerformanceConfiguration : IEntityTypeConfiguration<Performance>
 		builder.HasIndex(performance => performance.Date);
 		builder.HasIndex(performance => performance.BandId);
 		builder.HasIndex(performance => performance.EventId);
+		builder.HasIndex(performance => new { performance.Source, performance.ExternalId })
+			.IsUnique();
 
 		builder.HasOne(performance => performance.Band)
 			.WithMany(band => band.Performances)

@@ -12,6 +12,14 @@ public class EventConfiguration : IEntityTypeConfiguration<Event>
 
 		builder.HasKey(@event => @event.Id);
 
+		builder.Property(@event => @event.Source)
+			.IsRequired()
+			.HasMaxLength(100);
+
+		builder.Property(@event => @event.ExternalId)
+			.IsRequired()
+			.HasMaxLength(200);
+
 		builder.Property(@event => @event.Name)
 			.IsRequired()
 			.HasMaxLength(200);
@@ -38,5 +46,7 @@ public class EventConfiguration : IEntityTypeConfiguration<Event>
 			.HasMaxLength(2048);
 
 		builder.HasIndex(@event => @event.StartDate);
+		builder.HasIndex(@event => new { @event.Source, @event.ExternalId })
+			.IsUnique();
 	}
 }

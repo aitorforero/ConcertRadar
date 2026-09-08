@@ -12,6 +12,14 @@ public class GenreConfiguration : IEntityTypeConfiguration<Genre>
 
 		builder.HasKey(genre => genre.Id);
 
+		builder.Property(genre => genre.Source)
+			.IsRequired()
+			.HasMaxLength(100);
+
+		builder.Property(genre => genre.ExternalId)
+			.IsRequired()
+			.HasMaxLength(200);
+
 		builder.Property(genre => genre.Name)
 			.IsRequired()
 			.HasMaxLength(100);
@@ -19,7 +27,9 @@ public class GenreConfiguration : IEntityTypeConfiguration<Genre>
 		builder.Property(genre => genre.Description)
 			.HasMaxLength(1000);
 
-		builder.HasIndex(genre => genre.Name)
+		builder.HasIndex(genre => new { genre.Source, genre.ExternalId })
 			.IsUnique();
+
+		builder.HasIndex(genre => genre.Name);
 	}
 }

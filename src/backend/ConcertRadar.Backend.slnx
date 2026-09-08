@@ -2,4 +2,5 @@
   <Project Path="ConcertRadar.Backend.Api/ConcertRadar.Backend.Api.csproj" />
   <Project Path="ConcertRadar.Backend.Core/ConcertRadar.Backend.Core.csproj" />
   <Project Path="ConcertRadar.Backend.Infrastructure/ConcertRadar.Backend.Infrastructure.csproj" />
+  <Project Path="ConcertRadar.Backend.Scraper/ConcertRadar.Backend.Scraper.csproj" />
 </Solution>

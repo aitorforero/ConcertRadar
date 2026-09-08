@@ -4,6 +4,10 @@ public class Performance
 {
 	public Guid Id { get; set; }
 
+	public string Source { get; set; } = "manual";
+
+	public string ExternalId { get; set; } = Guid.NewGuid().ToString("N");
+
 	public Guid BandId { get; set; }
 
 	public Band Band { get; set; } = null!;
