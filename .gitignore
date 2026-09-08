@@ -29,6 +29,9 @@ TestResults/
 *.coverage
 *.coveragexml
 
+# Local databases
+*.db
+
 # OS files
 .DS_Store
 Thumbs.db
