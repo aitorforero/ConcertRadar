@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ConcertRadar.Backend.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ConcertRadarDbContext))]
-    [Migration("20260908185116_AddExternalSourceIdentity")]
-    partial class AddExternalSourceIdentity
+    [Migration("20260915121456_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -85,14 +85,6 @@ namespace ConcertRadar.Backend.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Address")
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("City")
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Description")
                         .HasMaxLength(2000)
                         .HasColumnType("TEXT");
@@ -122,14 +114,14 @@ namespace ConcertRadar.Backend.Infrastructure.Persistence.Migrations
                         .HasMaxLength(2048)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Venue")
-                        .IsRequired()
-                        .HasMaxLength(200)
+                    b.Property<Guid>("VenueId")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
                     b.HasIndex("StartDate");
+
+                    b.HasIndex("VenueId");
 
                     b.HasIndex("Source", "ExternalId")
                         .IsUnique();
@@ -211,6 +203,38 @@ namespace ConcertRadar.Backend.Infrastructure.Persistence.Migrations
                     b.ToTable("Performances", (string)null);
                 });
 
+            modelBuilder.Entity("ConcertRadar.Backend.Core.Entities.Venue", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("City")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Country")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Province")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Venues", (string)null);
+                });
+
             modelBuilder.Entity("ConcertRadar.Backend.Core.Entities.Band", b =>
                 {
                     b.HasOne("ConcertRadar.Backend.Core.Entities.Genre", "Genre")
@@ -220,6 +244,17 @@ namespace ConcertRadar.Backend.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Genre");
+                });
+
+            modelBuilder.Entity("ConcertRadar.Backend.Core.Entities.Event", b =>
+                {
+                    b.HasOne("ConcertRadar.Backend.Core.Entities.Venue", "Venue")
+                        .WithMany("Events")
+                        .HasForeignKey("VenueId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Venue");
                 });
 
             modelBuilder.Entity("ConcertRadar.Backend.Core.Entities.Performance", b =>
@@ -254,6 +289,11 @@ namespace ConcertRadar.Backend.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("ConcertRadar.Backend.Core.Entities.Genre", b =>
                 {
                     b.Navigation("Bands");
+                });
+
+            modelBuilder.Entity("ConcertRadar.Backend.Core.Entities.Venue", b =>
+                {
+                    b.Navigation("Events");
                 });
 #pragma warning restore 612, 618
         }

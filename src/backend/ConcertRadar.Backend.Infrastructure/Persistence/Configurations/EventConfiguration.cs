@@ -32,15 +32,10 @@ public class EventConfiguration : IEntityTypeConfiguration<Event>
 
 		builder.Property(@event => @event.EndDate);
 
-		builder.Property(@event => @event.Venue)
-			.IsRequired()
-			.HasMaxLength(200);
-
-		builder.Property(@event => @event.City)
-			.HasMaxLength(100);
-
-		builder.Property(@event => @event.Address)
-			.HasMaxLength(500);
+		builder.HasOne(@event => @event.Venue)
+			.WithMany(venue => venue.Events)
+			.HasForeignKey(@event => @event.VenueId)
+			.OnDelete(DeleteBehavior.Restrict);
 
 		builder.Property(@event => @event.TicketUrl)
 			.HasMaxLength(2048);

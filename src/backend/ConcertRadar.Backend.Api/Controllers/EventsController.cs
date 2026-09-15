@@ -42,8 +42,8 @@ public class EventsController(ConcertRadarDbContext dbContext) : ControllerBase
 		var @event = new Event
 		{
 			Id = Guid.NewGuid(), Name = request.Name, Description = request.Description,
-			StartDate = request.StartDate, EndDate = request.EndDate, Venue = request.Venue,
-			City = request.City, Address = request.Address, TicketUrl = request.TicketUrl
+			StartDate = request.StartDate, EndDate = request.EndDate,
+			Venue = await GetOrCreateVenueAsync(request, cancellationToken), TicketUrl = request.TicketUrl
 		};
 		dbContext.Events.Add(@event);
 		await dbContext.SaveChangesAsync(cancellationToken);
@@ -69,9 +69,7 @@ public class EventsController(ConcertRadarDbContext dbContext) : ControllerBase
 		@event.Description = request.Description;
 		@event.StartDate = request.StartDate;
 		@event.EndDate = request.EndDate;
-		@event.Venue = request.Venue;
-		@event.City = request.City;
-		@event.Address = request.Address;
+		@event.Venue = await GetOrCreateVenueAsync(request, cancellationToken);
 		@event.TicketUrl = request.TicketUrl;
 		await dbContext.SaveChangesAsync(cancellationToken);
 
@@ -95,5 +93,23 @@ public class EventsController(ConcertRadarDbContext dbContext) : ControllerBase
 
 	private static EventResponse ToResponse(Event @event) =>
 		new(@event.Id, @event.Name, @event.Description, @event.StartDate, @event.EndDate,
-			@event.Venue, @event.City, @event.Address, @event.TicketUrl);
+			@event.Venue.Name, @event.Venue.City, @event.Venue.Address, @event.TicketUrl);
+
+	private async Task<Venue> GetOrCreateVenueAsync(EventRequest request, CancellationToken cancellationToken)
+	{
+		var venue = await dbContext.Venues.SingleOrDefaultAsync(
+			candidate => candidate.Name == request.Venue && candidate.City == request.City && candidate.Address == request.Address,
+			cancellationToken);
+		if (venue is not null)
+		{
+			return venue;
+		}
+
+		venue = new Venue
+		{
+			Id = Guid.NewGuid(), Name = request.Venue, City = request.City, Address = request.Address
+		};
+		dbContext.Venues.Add(venue);
+		return venue;
+	}
 }

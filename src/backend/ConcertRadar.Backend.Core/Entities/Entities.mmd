@@ -1,0 +1,46 @@
+classDiagram
+  namespace ConcertRadar.Backend.Core.Entities {
+    class Venue {
+      Guid Id
+      string Name
+      string Address
+      string Province
+      string City
+      string Country
+      ICollection~Event~ Events
+    }
+    
+    class Band {
+      Guid Id
+      Guid GenreId
+      string Name
+      ICollection~Performance~ Performances
+    }
+
+    class Event {
+      Guid Id
+      string Name
+      DateTime StartDate
+      DateTime EndDate
+      Guid VenueId
+      ICollection~Performance~ Performances
+    }
+
+    class Genre {
+      Guid Id
+      string Name
+      ICollection~Band~ Bands
+    }
+
+    class Performance {
+      Guid Id
+      Guid BandId
+      Guid EventId
+      DateTime Date
+    }
+  }
+
+  Genre "1" --> "0..*" Band : contains
+  Band "1" --> "0..*" Performance : performs
+  Event "1" --> "0..*" Performance : contains 
+  Venue"1" --> "0..*" Event : schedules

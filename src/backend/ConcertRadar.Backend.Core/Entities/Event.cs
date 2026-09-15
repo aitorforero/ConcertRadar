@@ -16,11 +16,9 @@ public class Event
 
 	public DateTime? EndDate { get; set; }
 
-	public string Venue { get; set; } = string.Empty;
+	public Guid VenueId { get; set; }
 
-	public string? City { get; set; }
-
-	public string? Address { get; set; }
+	public Venue Venue { get; set; } = null!;
 
 	public string? TicketUrl { get; set; }
 

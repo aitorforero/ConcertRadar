@@ -41,39 +41,50 @@ public sealed class ConcertImporter(ConcertRadarDbContext dbContext)
 		}
 
 		@event.Name = source.Name;
-		@event.Description = source.Description;
 		@event.StartDate = source.StartDate;
 		@event.EndDate = source.EndDate;
-		@event.Venue = source.Venue;
-		@event.City = source.City;
-		@event.Address = source.Address;
-		@event.TicketUrl = source.TicketUrl;
+		@event.Venue = await UpsertVenueAsync(source, cancellationToken);
 		return @event;
+	}
+
+	private async Task<Venue> UpsertVenueAsync(ScrapedEvent source, CancellationToken cancellationToken)
+	{
+		var venue = await dbContext.Venues.SingleOrDefaultAsync(
+			candidate => candidate.Name == source.Venue && candidate.City == source.City && candidate.Address == source.Address,
+			cancellationToken);
+		if (venue is null)
+		{
+			venue = new Venue { Id = Guid.NewGuid(), Name = source.Venue };
+			dbContext.Venues.Add(venue);
+		}
+
+		venue.City = source.City;
+		venue.Address = source.Address;
+		return venue;
 	}
 
 	private async Task<Genre> UpsertGenreAsync(string source, ScrapedPerformance performance, CancellationToken cancellationToken)
 	{
 		var genre = await dbContext.Genres.SingleOrDefaultAsync(
-			entity => entity.Source == source && entity.ExternalId == performance.GenreExternalId,
+			entity => entity.Source == source ,
 			cancellationToken);
 		if (genre is null)
 		{
-			genre = new Genre { Id = Guid.NewGuid(), Source = source, ExternalId = performance.GenreExternalId };
+			genre = new Genre { Id = Guid.NewGuid(), Source = source };
 			dbContext.Genres.Add(genre);
 		}
 
-		genre.Name = performance.GenreName;
 		return genre;
 	}
 
 	private async Task<Band> UpsertBandAsync(string source, ScrapedPerformance performance, Genre genre, CancellationToken cancellationToken)
 	{
 		var band = await dbContext.Bands.SingleOrDefaultAsync(
-			entity => entity.Source == source && entity.ExternalId == performance.BandExternalId,
+			entity => entity.Source == source,
 			cancellationToken);
 		if (band is null)
 		{
-			band = new Band { Id = Guid.NewGuid(), Source = source, ExternalId = performance.BandExternalId };
+			band = new Band { Id = Guid.NewGuid(), Source = source};
 			dbContext.Bands.Add(band);
 		}
 
@@ -90,13 +101,13 @@ public sealed class ConcertImporter(ConcertRadarDbContext dbContext)
 		CancellationToken cancellationToken)
 	{
 		var performance = await dbContext.Performances.SingleOrDefaultAsync(
-			entity => entity.Source == source && entity.ExternalId == scrapedPerformance.ExternalId,
+			entity => entity.Source == source ,
 			cancellationToken);
 		if (performance is null)
 		{
 			performance = new Performance
 			{
-				Id = Guid.NewGuid(), Source = source, ExternalId = scrapedPerformance.ExternalId
+				Id = Guid.NewGuid(), Source = source
 			};
 			dbContext.Performances.Add(performance);
 		}

@@ -16,6 +16,8 @@ public class ConcertRadarDbContext : DbContext
 
 	public DbSet<Event> Events => Set<Event>();
 
+	public DbSet<Venue> Venues => Set<Venue>();
+
 	public DbSet<Performance> Performances => Set<Performance>();
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)

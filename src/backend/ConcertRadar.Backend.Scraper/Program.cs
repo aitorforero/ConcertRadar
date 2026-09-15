@@ -9,11 +9,6 @@ var builder = Host.CreateApplicationBuilder(args);
 builder.Services.Configure<HtmlSourceOptions>(builder.Configuration.GetSection("Scraping"));
 builder.Services.AddDbContext<ConcertRadarDbContext>(options =>
 	options.UseSqlite(builder.Configuration.GetConnectionString("ConcertRadar")));
-builder.Services.AddHttpClient<HtmlConcertSource>(client =>
-{
-	client.Timeout = TimeSpan.FromSeconds(30);
-	client.DefaultRequestHeaders.UserAgent.ParseAdd("ConcertRadar/1.0");
-});
 builder.Services.AddHttpClient<MariskalRockConcertSource>(client =>
 {
 	client.Timeout = TimeSpan.FromSeconds(30);
