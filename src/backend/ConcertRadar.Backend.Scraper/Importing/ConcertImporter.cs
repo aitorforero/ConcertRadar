@@ -11,10 +11,11 @@ public sealed class ConcertImporter(ConcertRadarDbContext dbContext)
 		IReadOnlyCollection<ScrapedEvent> scrapedEvents,
 		CancellationToken cancellationToken)
 	{
-		await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
 		foreach (var scrapedEvent in scrapedEvents)
 		{
+			await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+			
 			var @event = await UpsertEventAsync(scrapedEvent, cancellationToken);
 			foreach (var scrapedPerformance in scrapedEvent.Performances)
 			{
@@ -22,10 +23,11 @@ public sealed class ConcertImporter(ConcertRadarDbContext dbContext)
 				var band = await UpsertBandAsync(scrapedEvent.Source, scrapedPerformance, genre, cancellationToken);
 				await UpsertPerformanceAsync(scrapedEvent.Source, scrapedPerformance, band, @event, cancellationToken);
 			}
+			
+			await dbContext.SaveChangesAsync(cancellationToken);
+			await transaction.CommitAsync(cancellationToken);
 		}
 
-		await dbContext.SaveChangesAsync(cancellationToken);
-		await transaction.CommitAsync(cancellationToken);
 	}
 
 	private async Task<Event> UpsertEventAsync(ScrapedEvent source, CancellationToken cancellationToken)

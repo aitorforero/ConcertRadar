@@ -53,6 +53,7 @@ public sealed class MariskalRockConcertSource(
 		}
 
 		return events;
+
 	}
 
 	private IReadOnlyCollection<ScrapedEvent> ParseGrupos(string html, DateTime startTime)
@@ -108,15 +109,15 @@ public sealed class MariskalRockConcertSource(
 
 			var scrapedEvent = new ScrapedEvent(
 				Name,
-				string.Empty,
+				string.Format("{0} - {1}", eventName, eventDate),
 				name,
 				eventDate,
-				null,
+				eventDate,
 				match.Groups["sala"].Value,
-				null,
-				null,
+				string.Empty,
+				string.Empty,
 				match.Groups["ciudad"].Value,
-				null,
+				"España",
 				bandPerformances);
 
 			events.Add(scrapedEvent);
