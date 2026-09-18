@@ -36,7 +36,5 @@ public class HtmlSourceOptions
 
 	public string BandIdAttribute { get; set; } = "data-band-id";
 
-	public string GenreSelector { get; set; } = string.Empty;
-
 	public TimeSpan Interval { get; set; } = TimeSpan.FromHours(6);
 }

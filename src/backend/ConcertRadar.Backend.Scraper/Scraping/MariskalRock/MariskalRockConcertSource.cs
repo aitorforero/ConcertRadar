@@ -1,6 +1,7 @@
 using AngleSharp;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System.Reflection;
 using System.Text.RegularExpressions;
 
 namespace ConcertRadar.Backend.Scraper.Scraping.MariskalRock;
@@ -33,28 +34,47 @@ public sealed class MariskalRockConcertSource(
 			return [];
 		}
 
-		httpClient.Timeout = TimeSpan.FromSeconds(60);
-
 		string html;
 
 		try 
 		{
 			html = await httpClient.GetStringAsync(url, cancellationToken);
 		}
+		catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+		{
+			throw;
+		}
 		catch (Exception ex)
 		{
 			logger.LogError(ex, "Error al obtener el contenido de la página.");
-			return [];
+
+			const string resourceName = "ConcertRadar.Backend.Scraper.Scraping.MariscalRock.Guía de Conciertos - MariskalRock.com.html";
+			await using var resourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName);
+			if (resourceStream is null)
+			{
+				logger.LogError("No se encontró el recurso embebido {ResourceName}.", resourceName);
+				return [];
+			}
+
+			using var reader = new StreamReader(resourceStream);
+			html = await reader.ReadToEndAsync(cancellationToken);
 		}
 
 		foreach (Match match in Regex.Matches(html, inicialRegex))
 		{
-			events.AddRange(ParseGrupos(match.Groups["grupos"].Value, startTime));
+			var foundEvents = ParseGrupos(match.Groups["grupos"].Value, startTime);
+
+			// Filtrar eventos duplicados basados en Source y ExternalId
+			var filteredEvents = foundEvents.DistinctBy(ev => string.Format("{0}_{1}", ev.Source, ev.ExternalId))
+			            .Where(ev => !events.Any(existingEv => existingEv.Source == ev.Source && existingEv.ExternalId == ev.ExternalId))
+			            .ToList();
+			
+			events.AddRange(filteredEvents);
 		}
 
 		return events;
-
 	}
+
 
 	private IReadOnlyCollection<ScrapedEvent> ParseGrupos(string html, DateTime startTime)
 	{

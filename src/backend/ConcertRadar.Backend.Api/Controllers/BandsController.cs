@@ -34,16 +34,9 @@ public class BandsController(ConcertRadarDbContext dbContext) : ControllerBase
 	[HttpPost]
 	public async Task<ActionResult<BandResponse>> Create(BandRequest request, CancellationToken cancellationToken)
 	{
-		if (!await dbContext.Genres.AnyAsync(genre => genre.Id == request.GenreId, cancellationToken))
-		{
-			return BadRequest("El genero indicado no existe.");
-		}
-
 		var band = new Band
 		{
-			Id = Guid.NewGuid(), Name = request.Name, Description = request.Description,
-			GenreId = request.GenreId, Country = request.Country, City = request.City,
-			FoundedDate = request.FoundedDate, ImageUrl = request.ImageUrl, WebsiteUrl = request.WebsiteUrl
+			Id = Guid.NewGuid(), Name = request.Name
 		};
 		dbContext.Bands.Add(band);
 		await dbContext.SaveChangesAsync(cancellationToken);
@@ -60,19 +53,7 @@ public class BandsController(ConcertRadarDbContext dbContext) : ControllerBase
 			return NotFound();
 		}
 
-		if (!await dbContext.Genres.AnyAsync(genre => genre.Id == request.GenreId, cancellationToken))
-		{
-			return BadRequest("El genero indicado no existe.");
-		}
-
 		band.Name = request.Name;
-		band.Description = request.Description;
-		band.GenreId = request.GenreId;
-		band.Country = request.Country;
-		band.City = request.City;
-		band.FoundedDate = request.FoundedDate;
-		band.ImageUrl = request.ImageUrl;
-		band.WebsiteUrl = request.WebsiteUrl;
 		await dbContext.SaveChangesAsync(cancellationToken);
 
 		return NoContent();
@@ -101,6 +82,5 @@ public class BandsController(ConcertRadarDbContext dbContext) : ControllerBase
 	}
 
 	private static BandResponse ToResponse(Band band) =>
-		new(band.Id, band.Name, band.Description, band.GenreId, band.Country, band.City,
-			band.FoundedDate, band.ImageUrl, band.WebsiteUrl);
+		new(band.Id, band.Name);
 }

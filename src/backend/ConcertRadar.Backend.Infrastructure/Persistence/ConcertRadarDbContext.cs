@@ -10,8 +10,6 @@ public class ConcertRadarDbContext : DbContext
 	{
 	}
 
-	public DbSet<Genre> Genres => Set<Genre>();
-
 	public DbSet<Band> Bands => Set<Band>();
 
 	public DbSet<Event> Events => Set<Event>();

@@ -17,4 +17,8 @@
     <ProjectReference Include="..\ConcertRadar.Backend.Core\ConcertRadar.Backend.Core.csproj" />
     <ProjectReference Include="..\ConcertRadar.Backend.Infrastructure\ConcertRadar.Backend.Infrastructure.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Scraping\MariskalRock\Guía de Conciertos - MariskalRock.com.html" />
+  </ItemGroup>
 </Project>

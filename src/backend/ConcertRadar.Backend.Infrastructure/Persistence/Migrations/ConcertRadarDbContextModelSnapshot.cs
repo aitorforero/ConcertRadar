@@ -23,55 +23,14 @@ namespace ConcertRadar.Backend.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("City")
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Country")
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(2000)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ExternalId")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("FoundedDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("GenreId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ImageUrl")
-                        .HasMaxLength(2048)
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Source")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("WebsiteUrl")
-                        .HasMaxLength(2048)
-                        .HasColumnType("TEXT");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("GenreId");
-
                     b.HasIndex("Name");
-
-                    b.HasIndex("Source", "ExternalId")
-                        .IsUnique();
 
                     b.ToTable("Bands", (string)null);
                 });
@@ -126,41 +85,6 @@ namespace ConcertRadar.Backend.Infrastructure.Persistence.Migrations
                     b.ToTable("Events", (string)null);
                 });
 
-            modelBuilder.Entity("ConcertRadar.Backend.Core.Entities.Genre", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(1000)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ExternalId")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Source")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Name");
-
-                    b.HasIndex("Source", "ExternalId")
-                        .IsUnique();
-
-                    b.ToTable("Genres", (string)null);
-                });
-
             modelBuilder.Entity("ConcertRadar.Backend.Core.Entities.Performance", b =>
                 {
                     b.Property<Guid>("Id")
@@ -176,16 +100,6 @@ namespace ConcertRadar.Backend.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("EventId")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("ExternalId")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Source")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
                     b.HasKey("Id");
 
                     b.HasIndex("BandId");
@@ -193,9 +107,6 @@ namespace ConcertRadar.Backend.Infrastructure.Persistence.Migrations
                     b.HasIndex("Date");
 
                     b.HasIndex("EventId");
-
-                    b.HasIndex("Source", "ExternalId")
-                        .IsUnique();
 
                     b.ToTable("Performances", (string)null);
                 });
@@ -230,17 +141,6 @@ namespace ConcertRadar.Backend.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Venues", (string)null);
-                });
-
-            modelBuilder.Entity("ConcertRadar.Backend.Core.Entities.Band", b =>
-                {
-                    b.HasOne("ConcertRadar.Backend.Core.Entities.Genre", "Genre")
-                        .WithMany("Bands")
-                        .HasForeignKey("GenreId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Genre");
                 });
 
             modelBuilder.Entity("ConcertRadar.Backend.Core.Entities.Event", b =>
@@ -281,11 +181,6 @@ namespace ConcertRadar.Backend.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("ConcertRadar.Backend.Core.Entities.Event", b =>
                 {
                     b.Navigation("Performances");
-                });
-
-            modelBuilder.Entity("ConcertRadar.Backend.Core.Entities.Genre", b =>
-                {
-                    b.Navigation("Bands");
                 });
 
             modelBuilder.Entity("ConcertRadar.Backend.Core.Entities.Venue", b =>

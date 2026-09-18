@@ -12,7 +12,6 @@ classDiagram
     
     class Band {
       Guid Id
-      Guid GenreId
       string Name
       ICollection~Performance~ Performances
     }
@@ -26,12 +25,6 @@ classDiagram
       ICollection~Performance~ Performances
     }
 
-    class Genre {
-      Guid Id
-      string Name
-      ICollection~Band~ Bands
-    }
-
     class Performance {
       Guid Id
       Guid BandId
@@ -40,7 +33,6 @@ classDiagram
     }
   }
 
-  Genre "1" --> "0..*" Band : contains
   Band "1" --> "0..*" Performance : performs
   Event "1" --> "0..*" Performance : contains 
   Venue"1" --> "0..*" Event : schedules

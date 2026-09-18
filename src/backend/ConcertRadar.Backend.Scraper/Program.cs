@@ -4,8 +4,11 @@ using ConcertRadar.Backend.Scraper.Importing;
 using ConcertRadar.Backend.Scraper.Scraping;
 using ConcertRadar.Backend.Scraper.Scraping.MariskalRock;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 var builder = Host.CreateApplicationBuilder(args);
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
 builder.Services.Configure<HtmlSourceOptions>(builder.Configuration.GetSection("Scraping"));
 builder.Services.AddDbContext<ConcertRadarDbContext>(options =>
 	options.UseSqlite(builder.Configuration.GetConnectionString("ConcertRadar")));

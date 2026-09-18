@@ -12,18 +12,15 @@ namespace ConcertRadar.Backend.Infrastructure.Persistence.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Genres",
+                name: "Bands",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Source = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    ExternalId = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    Description = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true)
+                    Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Genres", x => x.Id);
+                    table.PrimaryKey("PK_Bands", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -40,33 +37,6 @@ namespace ConcertRadar.Backend.Infrastructure.Persistence.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Venues", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Bands",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Source = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    ExternalId = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    Description = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: true),
-                    GenreId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Country = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
-                    City = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
-                    FoundedDate = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    ImageUrl = table.Column<string>(type: "TEXT", maxLength: 2048, nullable: true),
-                    WebsiteUrl = table.Column<string>(type: "TEXT", maxLength: 2048, nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Bands", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Bands_Genres_GenreId",
-                        column: x => x.GenreId,
-                        principalTable: "Genres",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -99,8 +69,6 @@ namespace ConcertRadar.Backend.Infrastructure.Persistence.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Source = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    ExternalId = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
                     BandId = table.Column<Guid>(type: "TEXT", nullable: false),
                     EventId = table.Column<Guid>(type: "TEXT", nullable: false),
                     Date = table.Column<DateTime>(type: "TEXT", nullable: false)
@@ -123,20 +91,9 @@ namespace ConcertRadar.Backend.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Bands_GenreId",
-                table: "Bands",
-                column: "GenreId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Bands_Name",
                 table: "Bands",
                 column: "Name");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Bands_Source_ExternalId",
-                table: "Bands",
-                columns: new[] { "Source", "ExternalId" },
-                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Events_Source_ExternalId",
@@ -155,17 +112,6 @@ namespace ConcertRadar.Backend.Infrastructure.Persistence.Migrations
                 column: "VenueId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Genres_Name",
-                table: "Genres",
-                column: "Name");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Genres_Source_ExternalId",
-                table: "Genres",
-                columns: new[] { "Source", "ExternalId" },
-                unique: true);
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Performances_BandId",
                 table: "Performances",
                 column: "BandId");
@@ -179,12 +125,6 @@ namespace ConcertRadar.Backend.Infrastructure.Persistence.Migrations
                 name: "IX_Performances_EventId",
                 table: "Performances",
                 column: "EventId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Performances_Source_ExternalId",
-                table: "Performances",
-                columns: new[] { "Source", "ExternalId" },
-                unique: true);
         }
 
         /// <inheritdoc />
@@ -198,9 +138,6 @@ namespace ConcertRadar.Backend.Infrastructure.Persistence.Migrations
 
             migrationBuilder.DropTable(
                 name: "Events");
-
-            migrationBuilder.DropTable(
-                name: "Genres");
 
             migrationBuilder.DropTable(
                 name: "Venues");
