@@ -8,7 +8,7 @@ public class ConcertRadarDbContextFactory : IDesignTimeDbContextFactory<ConcertR
 	public ConcertRadarDbContext CreateDbContext(string[] args)
 	{
 		var optionsBuilder = new DbContextOptionsBuilder<ConcertRadarDbContext>();
-		optionsBuilder.UseSqlite("Data Source=concert-radar.db");
+		optionsBuilder.UseSqlite($"Data Source={ConcertRadarDatabase.Resolve(Directory.GetCurrentDirectory())}");
 
 		return new ConcertRadarDbContext(optionsBuilder.Options);
 	}

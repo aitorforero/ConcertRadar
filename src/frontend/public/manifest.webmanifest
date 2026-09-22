@@ -1,0 +1,13 @@
+{
+  "name": "ConcertRadar",
+  "short_name": "ConcertRadar",
+  "description": "Encuentra conciertos que merecen salir de tu calendario.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f1e9",
+  "theme_color": "#f5f1e9",
+  "lang": "es",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

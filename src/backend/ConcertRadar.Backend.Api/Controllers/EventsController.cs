@@ -11,9 +11,31 @@ namespace ConcertRadar.Backend.Api.Controllers;
 public class EventsController(ConcertRadarDbContext dbContext) : ControllerBase
 {
 	[HttpGet]
-	public async Task<ActionResult<IEnumerable<EventResponse>>> GetAll(CancellationToken cancellationToken)
+	public async Task<ActionResult<IEnumerable<EventResponse>>> GetAll(
+		[FromQuery] string? search,
+		[FromQuery] string? city,
+		CancellationToken cancellationToken)
 	{
-		var events = await dbContext.Events.AsNoTracking()
+		var query = dbContext.Events.AsNoTracking()
+			.Include(@event => @event.Venue)
+			.AsQueryable();
+
+		if (!string.IsNullOrWhiteSpace(city) && !city.Equals("Todas", StringComparison.OrdinalIgnoreCase))
+		{
+			query = query.Where(@event => @event.Venue != null && @event.Venue.City != null && @event.Venue.City == city);
+		}
+
+		if (!string.IsNullOrWhiteSpace(search))
+		{
+			var normalized = search.Trim();
+			query = query.Where(@event =>
+				@event.Name.Contains(normalized) ||
+				(@event.Venue != null && @event.Venue.Name.Contains(normalized)) ||
+				(@event.Venue != null && @event.Venue.City != null && @event.Venue.City.Contains(normalized)));
+		}
+
+		var events = await query
+			.OrderBy(@event => @event.StartDate)
 			.Select(@event => ToResponse(@event))
 			.ToListAsync(cancellationToken);
 
@@ -24,6 +46,7 @@ public class EventsController(ConcertRadarDbContext dbContext) : ControllerBase
 	public async Task<ActionResult<EventResponse>> GetById(Guid id, CancellationToken cancellationToken)
 	{
 		var @event = await dbContext.Events.AsNoTracking()
+			.Include(@event => @event.Venue)
 			.Where(@event => @event.Id == id)
 			.Select(@event => ToResponse(@event))
 			.SingleOrDefaultAsync(cancellationToken);
@@ -93,7 +116,10 @@ public class EventsController(ConcertRadarDbContext dbContext) : ControllerBase
 
 	private static EventResponse ToResponse(Event @event) =>
 		new(@event.Id, @event.Name, @event.Description, @event.StartDate, @event.EndDate,
-			@event.Venue.Name, @event.Venue.City, @event.Venue.Address, @event.TicketUrl);
+			@event.Venue?.Name ?? "Sin venue",
+			@event.Venue?.City,
+			@event.Venue?.Address,
+			@event.TicketUrl);
 
 	private async Task<Venue> GetOrCreateVenueAsync(EventRequest request, CancellationToken cancellationToken)
 	{

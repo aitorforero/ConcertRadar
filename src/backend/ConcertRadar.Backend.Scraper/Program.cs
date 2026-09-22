@@ -11,7 +11,7 @@ builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Services.Configure<HtmlSourceOptions>(builder.Configuration.GetSection("Scraping"));
 builder.Services.AddDbContext<ConcertRadarDbContext>(options =>
-	options.UseSqlite(builder.Configuration.GetConnectionString("ConcertRadar")));
+	options.UseSqlite($"Data Source={ConcertRadarDatabase.Resolve(builder.Environment.ContentRootPath)}"));
 builder.Services.AddHttpClient<MariskalRockConcertSource>(client =>
 {
 	client.Timeout = TimeSpan.FromSeconds(30);

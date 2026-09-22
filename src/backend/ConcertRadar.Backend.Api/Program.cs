@@ -6,7 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddDbContext<ConcertRadarDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("ConcertRadar")));
+    options.UseSqlite($"Data Source={ConcertRadarDatabase.Resolve(builder.Environment.ContentRootPath)}"));
 
 var app = builder.Build();
 
