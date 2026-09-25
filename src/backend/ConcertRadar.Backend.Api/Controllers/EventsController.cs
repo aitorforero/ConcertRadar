@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using ConcertRadar.Backend.Api.Models;
 using ConcertRadar.Backend.Core.Entities;
 using ConcertRadar.Backend.Infrastructure.Persistence;
@@ -14,15 +15,34 @@ public class EventsController(ConcertRadarDbContext dbContext) : ControllerBase
 	public async Task<ActionResult<IEnumerable<EventResponse>>> GetAll(
 		[FromQuery] string? search,
 		[FromQuery] string? city,
+		[FromQuery] DateTime? fromDate,
+		[FromQuery] DateTime? toDate,
 		CancellationToken cancellationToken)
 	{
+		if (fromDate.HasValue && toDate.HasValue && toDate.Value.Date < fromDate.Value.Date)
+		{
+			return BadRequest("toDate no puede ser anterior a fromDate.");
+		}
+
 		var query = dbContext.Events.AsNoTracking()
 			.Include(@event => @event.Venue)
+			.Include(@event => @event.Performances)
+			.ThenInclude(performance => performance.Band)
 			.AsQueryable();
 
 		if (!string.IsNullOrWhiteSpace(city) && !city.Equals("Todas", StringComparison.OrdinalIgnoreCase))
 		{
 			query = query.Where(@event => @event.Venue != null && @event.Venue.City != null && @event.Venue.City == city);
+		}
+
+		if (fromDate.HasValue)
+		{
+			query = query.Where(@event => @event.StartDate >= fromDate.Value.Date);
+		}
+
+		if (toDate.HasValue)
+		{
+			query = query.Where(@event => @event.StartDate < toDate.Value.Date.AddDays(1));
 		}
 
 		if (!string.IsNullOrWhiteSpace(search))
@@ -34,12 +54,12 @@ public class EventsController(ConcertRadarDbContext dbContext) : ControllerBase
 				(@event.Venue != null && @event.Venue.City != null && @event.Venue.City.Contains(normalized)));
 		}
 
+		var followedBandIds = await GetFollowedBandIdsAsync(cancellationToken);
 		var events = await query
 			.OrderBy(@event => @event.StartDate)
-			.Select(@event => ToResponse(@event))
 			.ToListAsync(cancellationToken);
 
-		return Ok(events);
+		return Ok(events.Select(@event => ToResponse(@event, followedBandIds)));
 	}
 
 	[HttpGet("{id:guid}")]
@@ -47,11 +67,18 @@ public class EventsController(ConcertRadarDbContext dbContext) : ControllerBase
 	{
 		var @event = await dbContext.Events.AsNoTracking()
 			.Include(@event => @event.Venue)
+			.Include(@event => @event.Performances)
+			.ThenInclude(performance => performance.Band)
 			.Where(@event => @event.Id == id)
-			.Select(@event => ToResponse(@event))
 			.SingleOrDefaultAsync(cancellationToken);
 
-		return @event is null ? NotFound() : Ok(@event);
+		if (@event is null)
+		{
+			return NotFound();
+		}
+
+		var followedBandIds = await GetFollowedBandIdsAsync(cancellationToken);
+		return Ok(ToResponse(@event, followedBandIds));
 	}
 
 	[HttpPost]
@@ -71,7 +98,7 @@ public class EventsController(ConcertRadarDbContext dbContext) : ControllerBase
 		dbContext.Events.Add(@event);
 		await dbContext.SaveChangesAsync(cancellationToken);
 
-		return CreatedAtAction(nameof(GetById), new { id = @event.Id }, ToResponse(@event));
+		return CreatedAtAction(nameof(GetById), new { id = @event.Id }, ToResponse(@event, new HashSet<Guid>()));
 	}
 
 	[HttpPut("{id:guid}")]
@@ -114,12 +141,31 @@ public class EventsController(ConcertRadarDbContext dbContext) : ControllerBase
 		return NoContent();
 	}
 
-	private static EventResponse ToResponse(Event @event) =>
+	private async Task<HashSet<Guid>> GetFollowedBandIdsAsync(CancellationToken cancellationToken)
+	{
+		if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
+		{
+			return [];
+		}
+
+		return await dbContext.UserBandFollows
+			.Where(follow => follow.UserId == userId)
+			.Select(follow => follow.BandId)
+			.ToHashSetAsync(cancellationToken);
+	}
+
+	private static EventResponse ToResponse(Event @event, IReadOnlySet<Guid> followedBandIds) =>
 		new(@event.Id, @event.Name, @event.Description, @event.StartDate, @event.EndDate,
 			@event.Venue?.Name ?? "Sin venue",
 			@event.Venue?.City,
 			@event.Venue?.Address,
-			@event.TicketUrl);
+			@event.TicketUrl,
+			@event.Performances
+				.Select(performance => performance.Band)
+				.Where(band => band is not null)
+				.DistinctBy(band => band.Id)
+				.Select(band => new ArtistResponse(band.Id, band.Name, followedBandIds.Contains(band.Id)))
+				.ToArray());
 
 	private async Task<Venue> GetOrCreateVenueAsync(EventRequest request, CancellationToken cancellationToken)
 	{

@@ -18,6 +18,10 @@ public class ConcertRadarDbContext : DbContext
 
 	public DbSet<Performance> Performances => Set<Performance>();
 
+	public DbSet<User> Users => Set<User>();
+
+	public DbSet<UserBandFollow> UserBandFollows => Set<UserBandFollow>();
+
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{
 		modelBuilder.ApplyConfigurationsFromAssembly(typeof(ConcertRadarDbContext).Assembly);

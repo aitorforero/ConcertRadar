@@ -3,6 +3,7 @@ using System;
 using ConcertRadar.Backend.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ConcertRadar.Backend.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ConcertRadarDbContext))]
-    partial class ConcertRadarDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260925093547_AddUsers")]
+    partial class AddUsers
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.0");
@@ -143,21 +146,6 @@ namespace ConcertRadar.Backend.Infrastructure.Persistence.Migrations
                     b.ToTable("Users", (string)null);
                 });
 
-            modelBuilder.Entity("ConcertRadar.Backend.Core.Entities.UserBandFollow", b =>
-                {
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("BandId")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("UserId", "BandId");
-
-                    b.HasIndex("BandId");
-
-                    b.ToTable("UserBandFollows", (string)null);
-                });
-
             modelBuilder.Entity("ConcertRadar.Backend.Core.Entities.Venue", b =>
                 {
                     b.Property<Guid>("Id")
@@ -218,25 +206,6 @@ namespace ConcertRadar.Backend.Infrastructure.Persistence.Migrations
                     b.Navigation("Band");
 
                     b.Navigation("Event");
-                });
-
-            modelBuilder.Entity("ConcertRadar.Backend.Core.Entities.UserBandFollow", b =>
-                {
-                    b.HasOne("ConcertRadar.Backend.Core.Entities.Band", "Band")
-                        .WithMany()
-                        .HasForeignKey("BandId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("ConcertRadar.Backend.Core.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Band");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("ConcertRadar.Backend.Core.Entities.Band", b =>

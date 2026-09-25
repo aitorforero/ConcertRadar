@@ -2,6 +2,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ConcertRadar.Backend.Api.Models;
 
+public record ArtistResponse(Guid Id, string Name, bool IsFollowed);
+
 public record EventResponse(
 	Guid Id,
 	string Name,
@@ -11,7 +13,8 @@ public record EventResponse(
 	string Venue,
 	string? City,
 	string? Address,
-	string? TicketUrl);
+	string? TicketUrl,
+	IReadOnlyCollection<ArtistResponse> Artists);
 
 public class EventRequest
 {
