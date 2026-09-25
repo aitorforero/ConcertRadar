@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using ConcertRadar.Backend.Api.Models;
 using ConcertRadar.Backend.Core.Entities;
 using ConcertRadar.Backend.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
@@ -12,6 +13,24 @@ namespace ConcertRadar.Backend.Api.Controllers;
 [Route("api/bands/{bandId:guid}/follow")]
 public class BandFollowsController(ConcertRadarDbContext dbContext) : ControllerBase
 {
+	[HttpGet("~/api/auth/me/followed-artists")]
+	public async Task<ActionResult<IEnumerable<FollowedArtistResponse>>> GetFollowedArtists(CancellationToken cancellationToken)
+	{
+		if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
+		{
+			return Unauthorized();
+		}
+
+		var artists = await dbContext.UserBandFollows
+			.AsNoTracking()
+			.Where(follow => follow.UserId == userId)
+			.OrderBy(follow => follow.Band.Name)
+			.Select(follow => new FollowedArtistResponse(follow.Band.Id, follow.Band.Name))
+			.ToListAsync(cancellationToken);
+
+		return Ok(artists);
+	}
+
 	[HttpPost]
 	public async Task<IActionResult> Follow(Guid bandId, CancellationToken cancellationToken)
 	{

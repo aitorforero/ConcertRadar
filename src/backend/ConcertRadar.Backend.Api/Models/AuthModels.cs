@@ -4,6 +4,8 @@ namespace ConcertRadar.Backend.Api.Models;
 
 public record UserResponse(Guid Id, string Name, string Email);
 
+public record FollowedArtistResponse(Guid Id, string Name);
+
 public class UpdateProfileRequest
 {
 	[Required]

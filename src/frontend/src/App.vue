@@ -26,6 +26,11 @@ type Artist = {
   isFollowed: boolean
 }
 
+type FollowedArtist = {
+  id: string
+  name: string
+}
+
 const concerts = ref<Concert[]>([])
 const search = ref('')
 const selectedCity = ref('Todas')
@@ -47,6 +52,7 @@ const accountMessage = ref('')
 const accountError = ref('')
 const artistMenuConcertId = ref<string | null>(null)
 const actionError = ref('')
+const followedArtists = ref<FollowedArtist[]>([])
 
 const cities = computed(() => ['Todas', ...new Set(concerts.value.map((concert) => concert.city).filter(Boolean) as string[])])
 const filteredConcerts = computed(() => [...concerts.value].sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()))
@@ -115,9 +121,26 @@ async function loadCurrentUser() {
     if (response.ok) {
       currentUser.value = await response.json()
       profileForm.value.name = currentUser.value?.name ?? ''
+      await loadFollowedArtists()
     }
   } catch {
     currentUser.value = null
+  }
+}
+
+async function loadFollowedArtists() {
+  if (!currentUser.value) {
+    followedArtists.value = []
+    return
+  }
+
+  try {
+    const response = await fetch('/api/auth/me/followed-artists', { credentials: 'include' })
+    if (!response.ok) throw new Error('Unable to load followed artists')
+    const data = await response.json()
+    followedArtists.value = Array.isArray(data) ? data : []
+  } catch {
+    followedArtists.value = []
   }
 }
 
@@ -157,6 +180,7 @@ async function submitAuth() {
     currentUser.value = data
     profileForm.value.name = data.name
     authPanelOpen.value = false
+    await loadFollowedArtists()
     await loadConcerts()
   } catch {
     authError.value = 'La API no está disponible.'
@@ -215,6 +239,8 @@ async function deleteAccount() {
     return
   }
   currentUser.value = null
+  followedArtists.value = []
+  activeView.value = 'Descubrir'
   userMenuOpen.value = false
   authPanelOpen.value = false
 }
@@ -222,6 +248,8 @@ async function deleteAccount() {
 async function logout() {
   await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
   currentUser.value = null
+  followedArtists.value = []
+  activeView.value = 'Descubrir'
   userMenuOpen.value = false
   authPanelOpen.value = false
   await loadConcerts()
@@ -255,6 +283,26 @@ async function updateArtistFollow(artist: Artist, shouldFollow: boolean) {
       : candidate),
   }))
   artistMenuConcertId.value = null
+  await loadFollowedArtists()
+}
+
+async function unfollowArtist(artist: FollowedArtist) {
+  const response = await fetch(`/api/bands/${artist.id}/follow`, {
+    method: 'DELETE',
+    credentials: 'include',
+  })
+  if (!response.ok) {
+    actionError.value = 'No se ha podido dejar de seguir al artista.'
+    return
+  }
+
+  followedArtists.value = followedArtists.value.filter((candidate) => candidate.id !== artist.id)
+  concerts.value = concerts.value.map((concert) => ({
+    ...concert,
+    artists: concert.artists.map((candidate) => candidate.id === artist.id
+      ? { ...candidate, isFollowed: false }
+      : candidate),
+  }))
 }
 
 watch(search, () => {
@@ -286,6 +334,7 @@ onMounted(async () => {
         <button :class="{ active: activeView === 'Descubrir' }" @click="activeView = 'Descubrir'">Descubrir</button>
         <button :class="{ active: activeView === 'Mi agenda' }" @click="activeView = 'Mi agenda'">Mi agenda <small>0</small></button>
       </nav>
+      <button v-if="currentUser" class="followed-tab" :class="{ active: activeView === 'Artistas seguidos' }" @click="activeView = 'Artistas seguidos'">Artistas seguidos <small>{{ followedArtists.length }}</small></button>
       <div v-if="currentUser" class="user-menu-wrapper">
         <button class="profile-button" aria-label="Abrir menú de usuario" :aria-expanded="userMenuOpen" @click="openAccountMenu">{{ currentUser.name.slice(0, 2).toUpperCase() }}</button>
         <div v-if="userMenuOpen" class="user-dropdown" aria-label="Opciones de usuario">
@@ -297,6 +346,7 @@ onMounted(async () => {
     </header>
 
     <main>
+      <template v-if="activeView === 'Descubrir'">
       <section class="intro-section">
         <div class="eyebrow"><span class="pulse-dot"></span> Radar musical <span class="slash">/</span> España</div>
         <h1>Tu próxima<br /><em>noche inolvidable.</em></h1>
@@ -357,6 +407,21 @@ onMounted(async () => {
       <section v-if="nextConcert" class="spotlight-section">
         <div class="spotlight-label"><span class="pulse-dot"></span> DESTACADO DE LA SEMANA</div>
         <div class="spotlight-content"><div><p class="spotlight-city">{{ nextConcert.city }} · {{ nextConcert.venue }}</p><h2>{{ nextConcert.name }}</h2><p class="spotlight-description">{{ nextConcert.description }}</p></div><div class="spotlight-date"><span>{{ formatDate(nextConcert.startDate) }}</span><strong>{{ formatTime(nextConcert.startDate) }}</strong></div></div>
+      </section>
+      </template>
+
+      <section v-else class="followed-artists-section">
+        <div class="section-heading">
+          <div><span class="section-kicker">MI MÚSICA</span><h2>Artistas seguidos</h2></div>
+          <span class="result-count">{{ followedArtists.length }} seguidos</span>
+        </div>
+        <div v-if="!followedArtists.length" class="empty-state">Todavía no sigues a ningún artista.</div>
+        <div v-else class="followed-artists-list">
+          <article v-for="artist in followedArtists" :key="artist.id" class="followed-artist-row">
+            <h3>{{ artist.name }}</h3>
+            <button class="unfollow-button" @click="unfollowArtist(artist)">Dejar de seguir <span>↗</span></button>
+          </article>
+        </div>
       </section>
     </main>
 
