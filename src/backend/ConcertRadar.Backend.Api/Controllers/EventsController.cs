@@ -1,4 +1,6 @@
 using System.Security.Claims;
+using System.Globalization;
+using System.Text;
 using ConcertRadar.Backend.Api.Models;
 using ConcertRadar.Backend.Core.Entities;
 using ConcertRadar.Backend.Infrastructure.Persistence;
@@ -45,19 +47,20 @@ public class EventsController(ConcertRadarDbContext dbContext) : ControllerBase
 			query = query.Where(@event => @event.StartDate < toDate.Value.Date.AddDays(1));
 		}
 
-		if (!string.IsNullOrWhiteSpace(search))
-		{
-			var normalized = search.Trim();
-			query = query.Where(@event =>
-				@event.Name.Contains(normalized) ||
-				(@event.Venue != null && @event.Venue.Name.Contains(normalized)) ||
-				(@event.Venue != null && @event.Venue.City != null && @event.Venue.City.Contains(normalized)));
-		}
-
 		var followedBandIds = await GetFollowedBandIdsAsync(cancellationToken);
 		var events = await query
 			.OrderBy(@event => @event.StartDate)
 			.ToListAsync(cancellationToken);
+
+		if (!string.IsNullOrWhiteSpace(search))
+		{
+			var normalized = NormalizeForSearch(search.Trim());
+			events = events.Where(@event =>
+				NormalizeForSearch(@event.Name).Contains(normalized, StringComparison.OrdinalIgnoreCase) ||
+				(@event.Venue != null && NormalizeForSearch(@event.Venue.Name).Contains(normalized, StringComparison.OrdinalIgnoreCase)) ||
+				(@event.Venue != null && @event.Venue.City != null && NormalizeForSearch(@event.Venue.City).Contains(normalized, StringComparison.OrdinalIgnoreCase)))
+				.ToList();
+		}
 
 		return Ok(events.Select(@event => ToResponse(@event, followedBandIds)));
 	}
@@ -152,6 +155,16 @@ public class EventsController(ConcertRadarDbContext dbContext) : ControllerBase
 			.Where(follow => follow.UserId == userId)
 			.Select(follow => follow.BandId)
 			.ToHashSetAsync(cancellationToken);
+	}
+
+	private static string NormalizeForSearch(string value)
+	{
+		var decomposed = value.Normalize(NormalizationForm.FormD);
+		var withoutDiacritics = new string(decomposed
+			.Where(character => CharUnicodeInfo.GetUnicodeCategory(character) != UnicodeCategory.NonSpacingMark)
+			.ToArray());
+
+		return withoutDiacritics.Normalize(NormalizationForm.FormC);
 	}
 
 	private static EventResponse ToResponse(Event @event, IReadOnlySet<Guid> followedBandIds) =>
